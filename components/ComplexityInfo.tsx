@@ -1,111 +1,203 @@
 import React, { useState } from 'react';
-import { AlgorithmInfo, AlgorithmType } from '../types';
+import { AlgorithmInfo, AlgorithmType, BarState } from '../types';
 import { getAlgorithmComplexityAnalysis } from '../services/geminiService';
-import { BrainCircuit, Loader2 } from 'lucide-react';
+import { BrainCircuit, Loader2, Clock, HardDrive, Code2, ChevronDown, Hash } from 'lucide-react';
 
 interface ComplexityInfoProps {
   info: AlgorithmInfo;
+  currentState: BarState;
+  stepCount: number;
 }
 
-const ComplexityInfo: React.FC<ComplexityInfoProps> = ({ info }) => {
+const getActiveLine = (algo: AlgorithmType, state: BarState): number | null => {
+  const lineMap: Record<string, Partial<Record<BarState, number>>> = {
+    [AlgorithmType.BubbleSort]: {
+      [BarState.Compare]: 2,
+      [BarState.Swap]: 3,
+    },
+    [AlgorithmType.SelectionSort]: {
+      [BarState.Compare]: 3,
+      [BarState.Overwrite]: 4,
+      [BarState.Swap]: 5,
+    },
+    [AlgorithmType.InsertionSort]: {
+      [BarState.Compare]: 3,
+      [BarState.Overwrite]: 4,
+    },
+    [AlgorithmType.MergeSort]: {
+      [BarState.Compare]: 1,
+      [BarState.Overwrite]: 5,
+    },
+    [AlgorithmType.QuickSort]: {
+      [BarState.Compare]: 2,
+      [BarState.Swap]: 2,
+    },
+    [AlgorithmType.HeapSort]: {
+      [BarState.Compare]: 0,
+      [BarState.Swap]: 2,
+    },
+  };
+  return lineMap[algo]?.[state] ?? null;
+};
+
+const colorizeCode = (line: string): React.ReactNode => {
+  const keywords = ['for', 'if', 'while', 'to', 'and', 'return'];
+  const functions = ['swap', 'merge', 'mergeSort', 'quickSort', 'partition', 'buildMaxHeap', 'heapify'];
+  const parts = line.split(/(\b\w+\b)/g);
+  return parts.map((part, i) => {
+    if (keywords.includes(part)) return <span key={i} className="text-yellow-400 font-semibold">{part}</span>;
+    if (functions.includes(part)) return <span key={i} className="text-sky-400 font-semibold">{part}</span>;
+    if (/^\d+$/.test(part)) return <span key={i} className="text-orange-300">{part}</span>;
+    return <span key={i}>{part}</span>;
+  });
+};
+
+const ComplexityInfo: React.FC<ComplexityInfoProps> = ({ info, currentState, stepCount }) => {
   const [analysis, setAnalysis] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [showAI, setShowAI] = useState(false);
 
   const handleAskAI = async () => {
+    setShowAI(true);
     setLoading(true);
     const result = await getAlgorithmComplexityAnalysis(info.name);
     setAnalysis(result);
     setLoading(false);
   };
 
-  // Reset analysis when algorithm changes
   React.useEffect(() => {
     setAnalysis(null);
+    setShowAI(false);
   }, [info.name]);
 
+  const activeLine = getActiveLine(info.name, currentState);
+
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-6xl mx-auto mt-6">
-      {/* Static Info Card */}
-      <div className="bg-slate-800 p-6 rounded-xl border border-slate-700 shadow-lg">
-        <h2 className="text-2xl font-bold text-white mb-4 flex items-center gap-2">
-          {info.name} <span className="text-sm font-normal text-slate-400">Overview</span>
-        </h2>
-        <p className="text-slate-300 mb-6">{info.description}</p>
-
-        <div className="grid grid-cols-2 gap-4">
-          <div className="bg-slate-900/50 p-4 rounded-lg border border-slate-700">
-            <h3 className="text-slate-400 text-sm uppercase tracking-wider mb-2">Time Complexity</h3>
-            <div className="space-y-1">
-              <div className="flex justify-between">
-                <span className="text-green-400">Best:</span>
-                <span className="font-mono text-white">{info.timeComplexity.best}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-yellow-400">Average:</span>
-                <span className="font-mono text-white">{info.timeComplexity.average}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-red-400">Worst:</span>
-                <span className="font-mono text-white">{info.timeComplexity.worst}</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-slate-900/50 p-4 rounded-lg border border-slate-700">
-            <h3 className="text-slate-400 text-sm uppercase tracking-wider mb-2">Space Complexity</h3>
-            <div className="flex justify-between items-center h-full">
-              <span className="text-blue-400">Worst:</span>
-              <span className="font-mono text-white text-xl">{info.spaceComplexity}</span>
-            </div>
-          </div>
+    <div className="w-full max-w-7xl mx-auto space-y-4">
+      {/* Title Row */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-baseline gap-3">
+          <h2 className="text-xl md:text-2xl font-bold text-white tracking-tight">{info.name}</h2>
+          <span className="text-xs font-medium text-[#03A63C] tracking-wide uppercase">Overview</span>
         </div>
-
-        {/* Algorithm Pseudocode */}
-        <div className="mt-4 bg-slate-900/50 p-4 rounded-lg border border-slate-700">
-          <h3 className="text-slate-400 text-sm uppercase tracking-wider mb-2">Algorithm</h3>
-          <pre className="font-mono text-sm text-cyan-200 leading-relaxed whitespace-pre overflow-x-auto">
-            {info.algorithm.join('\n')}
-          </pre>
+        <div className="flex items-center gap-2 bg-white/[0.06] px-3 py-1.5 rounded-xl border border-white/[0.06]">
+          <Hash className="w-3.5 h-3.5 text-yellow-400" />
+          <span className="text-[10px] text-white/35 uppercase tracking-wider font-semibold">Ops</span>
+          <span className="font-mono text-base font-bold text-white tabular-nums">{stepCount}</span>
         </div>
       </div>
 
-      {/* AI Analysis Card */}
-      <div className="bg-slate-800 p-6 rounded-xl border border-slate-700 shadow-lg flex flex-col">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-bold text-white flex items-center gap-2">
-            <BrainCircuit className="w-6 h-6 text-purple-400" />
-            AI Analysis
-          </h2>
-          {!analysis && (
+      {/* Description — brighter and larger */}
+      <p className="text-white/70 text-sm md:text-base leading-relaxed">{info.description}</p>
+
+      {/* Bento Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+
+        {/* Time Complexity */}
+        <div className="bg-white/[0.06] p-5 rounded-2xl border border-white/[0.06]">
+          <div className="flex items-center gap-2 mb-4">
+            <Clock className="w-4 h-4 text-[#03A63C]" />
+            <h3 className="text-[#03A63C] text-xs uppercase tracking-widest font-semibold">Time</h3>
+          </div>
+          <div className="space-y-2.5">
+            <div className="flex justify-between items-center">
+              <span className="text-white/40 text-sm">Best</span>
+              <span className="font-mono text-[#04D939] text-base font-semibold">{info.timeComplexity.best}</span>
+            </div>
+            <div className="w-full h-px bg-white/[0.06]"></div>
+            <div className="flex justify-between items-center">
+              <span className="text-white/40 text-sm">Avg</span>
+              <span className="font-mono text-yellow-400 text-base font-semibold">{info.timeComplexity.average}</span>
+            </div>
+            <div className="w-full h-px bg-white/[0.06]"></div>
+            <div className="flex justify-between items-center">
+              <span className="text-white/40 text-sm">Worst</span>
+              <span className="font-mono text-red-400 text-base font-semibold">{info.timeComplexity.worst}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Space Complexity */}
+        <div className="bg-white/[0.06] p-5 rounded-2xl border border-white/[0.06] flex flex-col">
+          <div className="flex items-center gap-2 mb-4">
+            <HardDrive className="w-4 h-4 text-[#03A63C]" />
+            <h3 className="text-[#03A63C] text-xs uppercase tracking-widest font-semibold">Space</h3>
+          </div>
+          <div className="flex-1 flex items-center justify-center">
+            <span className="font-mono text-4xl font-bold text-white">{info.spaceComplexity}</span>
+          </div>
+          <p className="text-white/20 text-xs text-center mt-2">Worst Case</p>
+        </div>
+
+        {/* Algorithm — larger code */}
+        <div className="bg-white/[0.06] p-5 rounded-2xl border border-white/[0.06]">
+          <div className="flex items-center gap-2 mb-4">
+            <Code2 className="w-4 h-4 text-[#03A63C]" />
+            <h3 className="text-[#03A63C] text-xs uppercase tracking-widest font-semibold">Algorithm</h3>
+          </div>
+          <div className="bg-[#012340]/70 rounded-xl border border-white/[0.04] overflow-hidden">
+            {info.algorithm.map((line, idx) => (
+              <div
+                key={idx}
+                className={`flex items-center gap-3 px-4 py-2 font-mono text-[13px] transition-all duration-200 ${activeLine === idx
+                    ? 'bg-yellow-400/15 border-l-2 border-yellow-400'
+                    : 'border-l-2 border-transparent'
+                  }`}
+              >
+                <span className="text-white/15 text-xs w-4 text-right select-none">{idx + 1}</span>
+                <span className={`whitespace-pre ${activeLine === idx ? 'text-white' : 'text-white/60'}`}>
+                  {colorizeCode(line)}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* AI Analysis — Collapsed */}
+      {!showAI ? (
+        <button
+          onClick={handleAskAI}
+          className="w-full flex items-center justify-center gap-2 py-3 bg-white/[0.03] hover:bg-white/[0.06] rounded-xl border border-white/[0.06] transition-all duration-200 group"
+        >
+          <BrainCircuit className="w-4 h-4 text-[#03A63C] group-hover:text-[#04D939] transition-colors" />
+          <span className="text-white/40 group-hover:text-white/60 text-sm font-medium transition-colors">AI Analysis</span>
+          <ChevronDown className="w-3.5 h-3.5 text-white/25 group-hover:text-white/40 transition-colors" />
+        </button>
+      ) : (
+        <div className="bg-white/[0.06] p-5 rounded-2xl border border-white/[0.06]">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-base font-bold text-white flex items-center gap-2">
+              <BrainCircuit className="w-4 h-4 text-[#03A63C]" />
+              AI Analysis
+            </h2>
             <button
-              onClick={handleAskAI}
-              disabled={loading}
-              className="px-4 py-2 bg-purple-600 hover:bg-purple-700 disabled:opacity-50 text-white rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
+              onClick={() => { setShowAI(false); setAnalysis(null); }}
+              className="text-white/25 hover:text-white/50 text-xs font-medium transition-colors px-2 py-1 rounded-lg hover:bg-white/5"
             >
-              {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Analyze'}
+              Collapse
             </button>
-          )}
+          </div>
+          <div className="bg-[#012340]/60 rounded-xl p-4 border border-white/[0.04] overflow-y-auto max-h-[250px]">
+            {loading ? (
+              <div className="flex items-center justify-center h-16 text-white/40 gap-2">
+                <Loader2 className="w-4 h-4 animate-spin text-[#04D939]" />
+                <span className="text-sm">Analyzing {info.name}...</span>
+              </div>
+            ) : analysis ? (
+              <div className="prose prose-invert prose-sm max-w-none">
+                <div dangerouslySetInnerHTML={{
+                  __html: analysis.replace(/\n/g, '<br/>').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                }} />
+              </div>
+            ) : (
+              <div className="h-16 flex items-center justify-center text-white/25 text-sm">
+                <p>Analysis will appear here.</p>
+              </div>
+            )}
+          </div>
         </div>
-
-        <div className="flex-1 bg-slate-900/50 rounded-lg p-4 border border-slate-700 overflow-y-auto max-h-[300px]">
-          {loading ? (
-            <div className="flex items-center justify-center h-full text-slate-400 gap-2">
-              <Loader2 className="w-5 h-5 animate-spin" />
-              Analyzing {info.name}...
-            </div>
-          ) : analysis ? (
-            <div className="prose prose-invert prose-sm max-w-none">
-              <div dangerouslySetInnerHTML={{
-                __html: analysis.replace(/\n/g, '<br/>').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-              }} />
-            </div>
-          ) : (
-            <div className="h-full flex items-center justify-center text-slate-500 text-center">
-              <p>Click "Analyze" to get a detailed breakdown <br />of why this algorithm behaves the way it does.</p>
-            </div>
-          )}
-        </div>
-      </div>
+      )}
     </div>
   );
 };

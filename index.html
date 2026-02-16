@@ -1,33 +1,118 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>TraceLab</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-      body {
-        font-family: 'Inter', sans-serif;
-        background-color: #0f172a; /* slate-900 */
-        color: #e2e8f0; /* slate-200 */
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TraceLab</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://api.fontshare.com/v2/css?f[]=satoshi@300,400,500,600,700,800,900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --nl-canvas: #012340;
+      --nl-surface: #025939;
+      --nl-secondary: #027333;
+      --nl-accent: #03A63C;
+      --nl-neon: #04D939;
+    }
+
+    body {
+      font-family: 'Satoshi', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: var(--nl-canvas);
+      color: #FFFFFF;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    /* Custom scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: var(--nl-canvas);
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: var(--nl-secondary);
+      border-radius: 3px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--nl-accent);
+    }
+
+    /* Range slider styling */
+    input[type="range"] {
+      -webkit-appearance: none;
+      appearance: none;
+      background: transparent;
+      cursor: pointer;
+    }
+
+    input[type="range"]::-webkit-slider-runnable-track {
+      height: 4px;
+      border-radius: 2px;
+      background: var(--nl-canvas);
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: var(--nl-neon);
+      margin-top: -8px;
+      box-shadow: 0 0 8px rgba(4, 217, 57, 0.4);
+      transition: box-shadow 0.2s ease;
+    }
+
+    input[type="range"]::-webkit-slider-thumb:hover {
+      box-shadow: 0 0 14px rgba(4, 217, 57, 0.6);
+    }
+
+    input[type="range"]::-moz-range-track {
+      height: 4px;
+      border-radius: 2px;
+      background: var(--nl-canvas);
+    }
+
+    input[type="range"]::-moz-range-thumb {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: var(--nl-neon);
+      border: none;
+      box-shadow: 0 0 8px rgba(4, 217, 57, 0.4);
+    }
+
+    /* Glassmorphism utility */
+    .glass {
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      background: rgba(2, 89, 57, 0.35);
+      border: 1px solid rgba(2, 115, 51, 0.4);
+    }
+
+    /* Subtle glow animation for active elements */
+    @keyframes neon-pulse {
+
+      0%,
+      100% {
+        box-shadow: 0 0 8px rgba(4, 217, 57, 0.3);
       }
-      /* Custom scrollbar */
-      ::-webkit-scrollbar {
-        width: 8px;
-        height: 8px;
+
+      50% {
+        box-shadow: 0 0 16px rgba(4, 217, 57, 0.5);
       }
-      ::-webkit-scrollbar-track {
-        background: #1e293b; 
-      }
-      ::-webkit-scrollbar-thumb {
-        background: #475569; 
-        border-radius: 4px;
-      }
-      ::-webkit-scrollbar-thumb:hover {
-        background: #64748b; 
-      }
-    </style>
+    }
+
+    .neon-glow {
+      animation: neon-pulse 2s ease-in-out infinite;
+    }
+  </style>
   <script type="importmap">
 {
   "imports": {
@@ -39,10 +124,12 @@
   }
 }
 </script>
-<link rel="stylesheet" href="/index.css">
+  <link rel="stylesheet" href="/index.css">
 </head>
-  <body>
-    <div id="root"></div>
+
+<body>
+  <div id="root"></div>
   <script type="module" src="/index.tsx"></script>
 </body>
+
 </html>

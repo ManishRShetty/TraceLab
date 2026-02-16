@@ -8,48 +8,44 @@ interface BarGraphProps {
 }
 
 const BarGraph: React.FC<BarGraphProps> = ({ array, indices, state }) => {
-  // Calculate max value for normalization height
   const maxVal = Math.max(...array, 1);
 
-  const getBarColor = (index: number) => {
-    // Sorted state overrides everything else if the whole array is sorted (handled by parent logic usually, 
-    // but here we check if the specific index is marked as sorted in a partial sort)
-    // However, the `indices` prop usually indicates active elements. 
-    // If state is Sorted, usually indices is empty (all sorted) or contains the sorted ones.
-
-    // Check if this index is one of the active indices
+  const getBarStyle = (index: number): { className: string; shadow?: string } => {
     if (indices.includes(index)) {
       switch (state) {
-        case BarState.Compare: return 'bg-yellow-400 box-shadow-[0_0_10px_rgba(250,204,21,0.5)]';
-        case BarState.Swap: return 'bg-red-500 box-shadow-[0_0_10px_rgba(239,68,68,0.5)]';
-        case BarState.Overwrite: return 'bg-purple-500';
-        case BarState.Sorted: return 'bg-green-500';
-        default: return 'bg-cyan-400';
+        case BarState.Compare:
+          return { className: 'bg-yellow-400', shadow: '0 0 10px rgba(250, 204, 21, 0.5)' };
+        case BarState.Swap:
+          return { className: 'bg-red-500', shadow: '0 0 10px rgba(239, 68, 68, 0.5)' };
+        case BarState.Overwrite:
+          return { className: 'bg-orange-400', shadow: '0 0 10px rgba(251, 146, 60, 0.5)' };
+        case BarState.Sorted:
+          return { className: 'bg-sky-400', shadow: '0 0 10px rgba(56, 189, 248, 0.4)' };
+        default:
+          return { className: 'bg-[#03A63C]' };
       }
     }
-
-    // Visual tweak: if the algorithm signals "Sorted" state with empty indices, usually means "Done".
-    // But specific algos yield specific sorted indices.
-    // We will rely on the parent to pass the full sorted array color if done.
-    // For now, default inactive bars.
-    return 'bg-cyan-600/80 hover:bg-cyan-500 transition-colors';
+    return { className: 'bg-[#03A63C]/50 hover:bg-[#03A63C]/70 transition-colors duration-150' };
   };
 
   return (
-    <div className="relative w-full h-[400px] p-4 bg-slate-900 rounded-lg shadow-inner border border-slate-800">
+    <div className="relative w-full h-[420px] px-4 pb-3 pt-12 bg-[#012340]/80 rounded-2xl border border-[#027333]/30">
       <div className="flex items-end w-full h-full gap-[1px] md:gap-[2px]">
-        {array.map((value, idx) => (
-          <div
-            key={idx}
-            className={`flex-1 rounded-t-sm ${getBarColor(idx)}`}
-            style={{
-              height: `${(value / maxVal) * 100}%`,
-              transition: 'height 0.1s ease-in-out'
-            }}
-            title={`Value: ${value}`}
-          >
-          </div>
-        ))}
+        {array.map((value, idx) => {
+          const { className, shadow } = getBarStyle(idx);
+          return (
+            <div
+              key={idx}
+              className={`flex-1 rounded-t-sm ${className}`}
+              style={{
+                height: `${(value / maxVal) * 100}%`,
+                transition: 'height 0.08s ease-out',
+                boxShadow: shadow || 'none'
+              }}
+              title={`Value: ${value}`}
+            />
+          );
+        })}
       </div>
     </div>
   );
