@@ -6,6 +6,7 @@ import Controls from './components/Controls';
 import ComplexityInfo from './components/ComplexityInfo';
 import { Activity } from 'lucide-react';
 import Aurora from './components/Aurora';
+import Footer from './components/Footer';
 
 // Static Data for algorithms
 const ALGORITHM_DATA: Record<AlgorithmType, AlgorithmInfo> = {
@@ -15,10 +16,15 @@ const ALGORITHM_DATA: Record<AlgorithmType, AlgorithmInfo> = {
     spaceComplexity: 'O(1)',
     description: 'A simple sorting algorithm that repeatedly steps through the list, compares adjacent elements and swaps them if they are in the wrong order.',
     algorithm: [
-      'for i = 0 to n-1',
-      '  for j = 0 to n-i-1',
-      '    if arr[j] > arr[j+1]',
-      '      swap(arr[j], arr[j+1])',
+      'procedure bubbleSort(arr, n)',
+      '  for i = 0 to n-1',
+      '    swapped = false',
+      '    for j = 0 to n-i-2',
+      '      if arr[j] > arr[j+1]',
+      '        swap(arr[j], arr[j+1])',
+      '        swapped = true',
+      '    if not swapped',
+      '      break  // already sorted',
     ]
   },
   [AlgorithmType.SelectionSort]: {
@@ -27,12 +33,14 @@ const ALGORITHM_DATA: Record<AlgorithmType, AlgorithmInfo> = {
     spaceComplexity: 'O(1)',
     description: 'Divides the input list into two parts: a sorted sublist of items which is built up from left to right at the front (left) of the list and a sublist of the remaining unsorted items.',
     algorithm: [
-      'for i = 0 to n-1',
-      '  min = i',
-      '  for j = i+1 to n',
-      '    if arr[j] < arr[min]',
-      '      min = j',
-      '  swap(arr[i], arr[min])',
+      'procedure selectionSort(arr, n)',
+      '  for i = 0 to n-1',
+      '    minIdx = i',
+      '    for j = i+1 to n-1',
+      '      if arr[j] < arr[minIdx]',
+      '        minIdx = j',
+      '    if minIdx != i',
+      '      swap(arr[i], arr[minIdx])',
     ]
   },
   [AlgorithmType.InsertionSort]: {
@@ -41,13 +49,14 @@ const ALGORITHM_DATA: Record<AlgorithmType, AlgorithmInfo> = {
     spaceComplexity: 'O(1)',
     description: 'Builds the final sorted array one item at a time. It is much less efficient on large lists than more advanced algorithms such as quicksort, heapsort, or merge sort.',
     algorithm: [
-      'for i = 1 to n',
-      '  key = arr[i]',
-      '  j = i - 1',
-      '  while j >= 0 and arr[j] > key',
-      '    arr[j+1] = arr[j]',
-      '    j = j - 1',
-      '  arr[j+1] = key',
+      'procedure insertionSort(arr, n)',
+      '  for i = 1 to n-1',
+      '    key = arr[i]',
+      '    j = i - 1',
+      '    while j >= 0 and arr[j] > key',
+      '      arr[j+1] = arr[j]',
+      '      j = j - 1',
+      '    arr[j+1] = key',
     ]
   },
   [AlgorithmType.MergeSort]: {
@@ -56,12 +65,15 @@ const ALGORITHM_DATA: Record<AlgorithmType, AlgorithmInfo> = {
     spaceComplexity: 'O(n)',
     description: 'A divide and conquer algorithm that divides the input array into two halves, calls itself for the two halves, and then merges the two sorted halves.',
     algorithm: [
-      'mergeSort(arr, l, r)',
+      'procedure mergeSort(arr, l, r)',
       '  if l < r',
-      '    mid = (l + r) / 2',
+      '    mid = floor((l + r) / 2)',
       '    mergeSort(arr, l, mid)',
       '    mergeSort(arr, mid+1, r)',
-      '    merge(arr, l, mid, r)',
+      '    merge left[l..mid], right[mid+1..r]',
+      '      while both halves have elements',
+      '        pick smaller, place in arr[k]',
+      '      copy remaining elements',
     ]
   },
   [AlgorithmType.QuickSort]: {
@@ -70,11 +82,17 @@ const ALGORITHM_DATA: Record<AlgorithmType, AlgorithmInfo> = {
     spaceComplexity: 'O(log n)',
     description: 'An efficient, in-place sorting algorithm that in practice is faster than MergeSort and HeapSort. It works by selecting a "pivot" element and partitioning the other elements into two sub-arrays.',
     algorithm: [
-      'quickSort(arr, lo, hi)',
+      'procedure quickSort(arr, lo, hi)',
       '  if lo < hi',
-      '    pivot = partition(arr, lo, hi)',
-      '    quickSort(arr, lo, pivot-1)',
-      '    quickSort(arr, pivot+1, hi)',
+      '    pivot = arr[hi]',
+      '    i = lo - 1',
+      '    for j = lo to hi-1',
+      '      if arr[j] < pivot',
+      '        i++; swap(arr[i], arr[j])',
+      '    swap(arr[i+1], arr[hi])',
+      '    p = i + 1',
+      '    quickSort(arr, lo, p-1)',
+      '    quickSort(arr, p+1, hi)',
     ]
   },
   [AlgorithmType.HeapSort]: {
@@ -83,10 +101,18 @@ const ALGORITHM_DATA: Record<AlgorithmType, AlgorithmInfo> = {
     spaceComplexity: 'O(1)',
     description: 'A comparison-based sorting algorithm. Heapsort can be thought of as an improved selection sort: like selection sort, heapsort divides its input into a sorted and an unsorted region.',
     algorithm: [
-      'buildMaxHeap(arr)',
-      'for i = n-1 to 1',
-      '  swap(arr[0], arr[i])',
-      '  heapify(arr, 0, i)',
+      'procedure heapSort(arr, n)',
+      '  // Build max heap',
+      '  for i = n/2-1 down to 0',
+      '    heapify(arr, n, i)',
+      '  // Extract elements',
+      '  for i = n-1 down to 1',
+      '    swap(arr[0], arr[i])',
+      '    heapify(arr, i, 0)',
+      'procedure heapify(arr, n, i)',
+      '  largest = max(i, left, right)',
+      '  if largest != i',
+      '    swap and recurse',
     ]
   }
 };
@@ -278,9 +304,7 @@ const App: React.FC = () => {
 
         </main>
 
-        <footer className="mt-10 text-center text-white/15 text-xs font-light">
-          <p>© 2024 TraceLab. Built with React & Tailwind.</p>
-        </footer>
+        <Footer />
       </div>
     </div>
   );

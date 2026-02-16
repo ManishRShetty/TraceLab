@@ -12,29 +12,29 @@ interface ComplexityInfoProps {
 const getActiveLine = (algo: AlgorithmType, state: BarState): number | null => {
   const lineMap: Record<string, Partial<Record<BarState, number>>> = {
     [AlgorithmType.BubbleSort]: {
-      [BarState.Compare]: 2,
-      [BarState.Swap]: 3,
+      [BarState.Compare]: 4, // if arr[j] > arr[j+1]
+      [BarState.Swap]: 5,    // swap(arr[j], arr[j+1])
     },
     [AlgorithmType.SelectionSort]: {
-      [BarState.Compare]: 3,
-      [BarState.Overwrite]: 4,
-      [BarState.Swap]: 5,
+      [BarState.Compare]: 4, // if arr[j] < arr[minIdx]
+      [BarState.Overwrite]: 5, // minIdx = j
+      [BarState.Swap]: 7,    // swap(arr[i], arr[minIdx])
     },
     [AlgorithmType.InsertionSort]: {
-      [BarState.Compare]: 3,
-      [BarState.Overwrite]: 4,
+      [BarState.Compare]: 4, // while j >= 0 and arr[j] > key
+      [BarState.Overwrite]: 5, // arr[j+1] = arr[j]
     },
     [AlgorithmType.MergeSort]: {
-      [BarState.Compare]: 1,
-      [BarState.Overwrite]: 5,
+      [BarState.Compare]: 1, // if l < r
+      [BarState.Overwrite]: 7, // pick smaller, place in arr[k]
     },
     [AlgorithmType.QuickSort]: {
-      [BarState.Compare]: 2,
-      [BarState.Swap]: 2,
+      [BarState.Compare]: 5, // if arr[j] < pivot
+      [BarState.Swap]: 6,    // i++; swap(arr[i], arr[j])
     },
     [AlgorithmType.HeapSort]: {
-      [BarState.Compare]: 0,
-      [BarState.Swap]: 2,
+      [BarState.Compare]: 9, // largest = max(i, left, right)
+      [BarState.Swap]: 6,    // swap(arr[0], arr[i])
     },
   };
   return lineMap[algo]?.[state] ?? null;
@@ -80,7 +80,7 @@ const ComplexityInfo: React.FC<ComplexityInfoProps> = ({ info, currentState, ste
           <h2 className="text-xl md:text-2xl font-bold text-white tracking-tight">{info.name}</h2>
           <span className="text-xs font-medium text-[#03A63C] tracking-wide uppercase">Overview</span>
         </div>
-        <div className="flex items-center gap-2 bg-white/[0.06] px-3 py-1.5 rounded-xl border border-white/[0.06]">
+        <div className="flex items-center gap-2 bg-[#091f2c] px-3 py-1.5 rounded-xl border border-white/[0.08]">
           <Hash className="w-3.5 h-3.5 text-yellow-400" />
           <span className="text-[10px] text-white/35 uppercase tracking-wider font-semibold">Ops</span>
           <span className="font-mono text-base font-bold text-white tabular-nums">{stepCount}</span>
@@ -94,31 +94,31 @@ const ComplexityInfo: React.FC<ComplexityInfoProps> = ({ info, currentState, ste
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
 
         {/* Time Complexity */}
-        <div className="bg-white/[0.06] p-5 rounded-2xl border border-white/[0.06]">
+        <div className="bg-[#091f2c] p-5 rounded-2xl border border-white/[0.08]">
           <div className="flex items-center gap-2 mb-4">
             <Clock className="w-4 h-4 text-[#03A63C]" />
             <h3 className="text-[#03A63C] text-xs uppercase tracking-widest font-semibold">Time</h3>
           </div>
           <div className="space-y-2.5">
             <div className="flex justify-between items-center">
-              <span className="text-white/40 text-sm">Best</span>
+              <span className="text-slate-300 text-sm">Best</span>
               <span className="font-mono text-[#04D939] text-base font-semibold">{info.timeComplexity.best}</span>
             </div>
             <div className="w-full h-px bg-white/[0.06]"></div>
             <div className="flex justify-between items-center">
-              <span className="text-white/40 text-sm">Avg</span>
+              <span className="text-slate-300 text-sm">Avg</span>
               <span className="font-mono text-yellow-400 text-base font-semibold">{info.timeComplexity.average}</span>
             </div>
             <div className="w-full h-px bg-white/[0.06]"></div>
             <div className="flex justify-between items-center">
-              <span className="text-white/40 text-sm">Worst</span>
+              <span className="text-slate-300 text-sm">Worst</span>
               <span className="font-mono text-red-400 text-base font-semibold">{info.timeComplexity.worst}</span>
             </div>
           </div>
         </div>
 
         {/* Space Complexity */}
-        <div className="bg-white/[0.06] p-5 rounded-2xl border border-white/[0.06] flex flex-col">
+        <div className="bg-[#091f2c] p-5 rounded-2xl border border-white/[0.08] flex flex-col">
           <div className="flex items-center gap-2 mb-4">
             <HardDrive className="w-4 h-4 text-[#03A63C]" />
             <h3 className="text-[#03A63C] text-xs uppercase tracking-widest font-semibold">Space</h3>
@@ -126,22 +126,22 @@ const ComplexityInfo: React.FC<ComplexityInfoProps> = ({ info, currentState, ste
           <div className="flex-1 flex items-center justify-center">
             <span className="font-mono text-4xl font-bold text-white">{info.spaceComplexity}</span>
           </div>
-          <p className="text-white/20 text-xs text-center mt-2">Worst Case</p>
+          <p className="text-slate-400 text-xs text-center mt-2">Worst Case</p>
         </div>
 
         {/* Algorithm — larger code */}
-        <div className="bg-white/[0.06] p-5 rounded-2xl border border-white/[0.06]">
+        <div className="bg-[#0d1117] p-5 rounded-2xl border border-white/[0.08]">
           <div className="flex items-center gap-2 mb-4">
             <Code2 className="w-4 h-4 text-[#03A63C]" />
             <h3 className="text-[#03A63C] text-xs uppercase tracking-widest font-semibold">Algorithm</h3>
           </div>
-          <div className="bg-[#012340]/70 rounded-xl border border-white/[0.04] overflow-hidden">
+          <div className="bg-[#010409] rounded-xl border border-white/[0.06] overflow-hidden">
             {info.algorithm.map((line, idx) => (
               <div
                 key={idx}
                 className={`flex items-center gap-3 px-4 py-2 font-mono text-[13px] transition-all duration-200 ${activeLine === idx
-                    ? 'bg-yellow-400/15 border-l-2 border-yellow-400'
-                    : 'border-l-2 border-transparent'
+                  ? 'bg-yellow-400/15 border-l-2 border-yellow-400'
+                  : 'border-l-2 border-transparent'
                   }`}
               >
                 <span className="text-white/15 text-xs w-4 text-right select-none">{idx + 1}</span>
@@ -165,7 +165,7 @@ const ComplexityInfo: React.FC<ComplexityInfoProps> = ({ info, currentState, ste
           <ChevronDown className="w-3.5 h-3.5 text-white/25 group-hover:text-white/40 transition-colors" />
         </button>
       ) : (
-        <div className="bg-white/[0.06] p-5 rounded-2xl border border-white/[0.06]">
+        <div className="bg-[#091f2c] p-5 rounded-2xl border border-white/[0.08]">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-base font-bold text-white flex items-center gap-2">
               <BrainCircuit className="w-4 h-4 text-[#03A63C]" />
