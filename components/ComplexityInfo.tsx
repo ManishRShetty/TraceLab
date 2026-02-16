@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { motion } from 'framer-motion';
 import { AlgorithmInfo, AlgorithmType, BarState } from '../types';
 import { getAlgorithmComplexityAnalysis } from '../services/geminiService';
 import { BrainCircuit, Loader2, Clock, HardDrive, Code2, ChevronDown, Hash } from 'lucide-react';
@@ -72,11 +73,25 @@ const ComplexityInfo: React.FC<ComplexityInfoProps> = ({ info, currentState, ste
 
   const activeLine = getActiveLine(info.name, currentState);
 
+  const stagger = {
+    hidden: { opacity: 0 },
+    visible: { opacity: 1, transition: { staggerChildren: 0.08 } },
+  };
+  const fadeUp = {
+    hidden: { opacity: 0, y: 16, filter: 'blur(6px)' },
+    visible: { opacity: 1, y: 0, filter: 'blur(0px)', transition: { type: 'spring', stiffness: 120, damping: 20 } },
+  };
+
   return (
-    <div className="w-full max-w-7xl mx-auto space-y-4">
+    <motion.div
+      initial="hidden"
+      animate="visible"
+      variants={stagger}
+      className="w-full max-w-7xl mx-auto space-y-4"
+    >
       {/* Title Row */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-baseline gap-3">
+      <motion.div variants={fadeUp} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div>
           <h2 className="text-xl md:text-2xl font-bold text-white tracking-tight">{info.name}</h2>
           <span className="text-xs font-medium text-[#03A63C] tracking-wide uppercase">Overview</span>
         </div>
@@ -85,16 +100,16 @@ const ComplexityInfo: React.FC<ComplexityInfoProps> = ({ info, currentState, ste
           <span className="text-[10px] text-white/35 uppercase tracking-wider font-semibold">Ops</span>
           <span className="font-mono text-base font-bold text-white tabular-nums">{stepCount}</span>
         </div>
-      </div>
+      </motion.div>
 
-      {/* Description — brighter and larger */}
-      <p className="text-white/70 text-sm md:text-base leading-relaxed">{info.description}</p>
+      {/* Description */}
+      <motion.p variants={fadeUp} className="text-white/70 text-sm md:text-base leading-relaxed">{info.description}</motion.p>
 
       {/* Bento Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+      <motion.div variants={stagger} className="grid grid-cols-1 md:grid-cols-3 gap-3">
 
         {/* Time Complexity */}
-        <div className="bg-[#091f2c] p-5 rounded-2xl border border-white/[0.08]">
+        <motion.div variants={fadeUp} className="bg-[#091f2c] p-5 rounded-2xl border border-white/[0.08]">
           <div className="flex items-center gap-2 mb-4">
             <Clock className="w-4 h-4 text-[#03A63C]" />
             <h3 className="text-[#03A63C] text-xs uppercase tracking-widest font-semibold">Time</h3>
@@ -115,10 +130,10 @@ const ComplexityInfo: React.FC<ComplexityInfoProps> = ({ info, currentState, ste
               <span className="font-mono text-red-400 text-base font-semibold">{info.timeComplexity.worst}</span>
             </div>
           </div>
-        </div>
+        </motion.div>
 
         {/* Space Complexity */}
-        <div className="bg-[#091f2c] p-5 rounded-2xl border border-white/[0.08] flex flex-col">
+        <motion.div variants={fadeUp} className="bg-[#091f2c] p-5 rounded-2xl border border-white/[0.08] flex flex-col">
           <div className="flex items-center gap-2 mb-4">
             <HardDrive className="w-4 h-4 text-[#03A63C]" />
             <h3 className="text-[#03A63C] text-xs uppercase tracking-widest font-semibold">Space</h3>
@@ -127,10 +142,10 @@ const ComplexityInfo: React.FC<ComplexityInfoProps> = ({ info, currentState, ste
             <span className="font-mono text-4xl font-bold text-white">{info.spaceComplexity}</span>
           </div>
           <p className="text-slate-400 text-xs text-center mt-2">Worst Case</p>
-        </div>
+        </motion.div>
 
-        {/* Algorithm — larger code */}
-        <div className="bg-[#0d1117] p-5 rounded-2xl border border-white/[0.08]">
+        {/* Algorithm */}
+        <motion.div variants={fadeUp} className="bg-[#0d1117] p-5 rounded-2xl border border-white/[0.08]">
           <div className="flex items-center gap-2 mb-4">
             <Code2 className="w-4 h-4 text-[#03A63C]" />
             <h3 className="text-[#03A63C] text-xs uppercase tracking-widest font-semibold">Algorithm</h3>
@@ -151,8 +166,8 @@ const ComplexityInfo: React.FC<ComplexityInfoProps> = ({ info, currentState, ste
               </div>
             ))}
           </div>
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
 
       {/* AI Analysis — Collapsed */}
       {!showAI ? (
@@ -198,7 +213,7 @@ const ComplexityInfo: React.FC<ComplexityInfoProps> = ({ info, currentState, ste
           </div>
         </div>
       )}
-    </div>
+    </motion.div>
   );
 };
 

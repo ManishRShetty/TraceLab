@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { motion } from 'framer-motion';
 import { AlgorithmType, AlgorithmInfo, BarState, SortStep } from './types';
 import { sortingAlgorithms } from './services/sortingAlgorithms';
 import BarGraph from './components/BarGraph';
@@ -251,32 +252,48 @@ const App: React.FC = () => {
       {/* Content */}
       <div className="relative z-10 min-h-screen p-4 md:p-8 lg:p-12 flex flex-col">
         {/* Header */}
-        <header className="mb-6 text-center space-y-2">
+        <motion.header
+          initial={{ opacity: 0, y: -20, filter: 'blur(10px)' }}
+          animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+          transition={{ duration: 0.6, ease: [0.25, 0.46, 0.45, 0.94] }}
+          className="mb-6 text-center space-y-2"
+        >
           <h1 className="text-4xl md:text-5xl font-black bg-gradient-to-r from-[#03A63C] to-[#04D939] bg-clip-text text-transparent tracking-tight">
             TraceLab
           </h1>
           <p className="text-white/40 text-sm md:text-base font-light tracking-wide">Interactive Sorting Visualizer & Complexity Analyzer</p>
-        </header>
+        </motion.header>
 
         <main className="flex-1 w-full max-w-7xl mx-auto flex flex-col gap-5">
 
           {/* Controls */}
-          <Controls
-            algorithm={algorithm}
-            setAlgorithm={handleAlgorithmChange}
-            isRunning={isRunning}
-            onPlay={handlePlay}
-            onPause={handlePause}
-            onReset={generateArray}
-            arraySize={arraySize}
-            setArraySize={setArraySize}
-            speed={speed}
-            setSpeed={setSpeed}
-            isSorted={isSorted}
-          />
+          <motion.div
+            initial={{ opacity: 0, y: 20, filter: 'blur(8px)' }}
+            animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+            transition={{ duration: 0.5, delay: 0.15, ease: [0.25, 0.46, 0.45, 0.94] }}
+          >
+            <Controls
+              algorithm={algorithm}
+              setAlgorithm={handleAlgorithmChange}
+              isRunning={isRunning}
+              onPlay={handlePlay}
+              onPause={handlePause}
+              onReset={generateArray}
+              arraySize={arraySize}
+              setArraySize={setArraySize}
+              speed={speed}
+              setSpeed={setSpeed}
+              isSorted={isSorted}
+            />
+          </motion.div>
 
           {/* Visualization Area */}
-          <div className="flex-1 min-h-[400px] flex flex-col relative bg-white/[0.04] backdrop-blur-sm rounded-2xl border border-white/[0.06] p-3 md:p-6 shadow-2xl">
+          <motion.div
+            initial={{ opacity: 0, y: 24, scale: 0.98, filter: 'blur(8px)' }}
+            animate={{ opacity: 1, y: 0, scale: 1, filter: 'blur(0px)' }}
+            transition={{ duration: 0.6, delay: 0.3, ease: [0.25, 0.46, 0.45, 0.94] }}
+            className="flex-1 min-h-[400px] flex flex-col relative bg-white/[0.04] backdrop-blur-sm rounded-2xl border border-white/[0.06] p-3 md:p-6 shadow-2xl"
+          >
             {/* Status Badge */}
             <div className="absolute top-4 left-6 z-10 glass px-4 py-2 rounded-full flex items-center gap-2">
               <Activity className="w-4 h-4 text-[#04D939]" />
@@ -290,17 +307,28 @@ const App: React.FC = () => {
             />
 
             {/* Color Legend */}
-            <div className="mt-5 flex flex-wrap justify-center gap-5 text-xs md:text-sm font-medium text-white/50">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.4, delay: 0.6 }}
+              className="mt-5 flex flex-wrap justify-center gap-5 text-xs md:text-sm font-medium text-white/50"
+            >
               <div className="flex items-center gap-2"><div className="w-3 h-3 bg-[#03A63C]/50 rounded-sm"></div> Default</div>
               <div className="flex items-center gap-2"><div className="w-3 h-3 bg-yellow-400 rounded-sm"></div> Compare</div>
               <div className="flex items-center gap-2"><div className="w-3 h-3 bg-red-500 rounded-sm"></div> Swap</div>
               <div className="flex items-center gap-2"><div className="w-3 h-3 bg-orange-400 rounded-sm"></div> Overwrite</div>
               <div className="flex items-center gap-2"><div className="w-3 h-3 bg-sky-400 rounded-sm"></div> Sorted</div>
-            </div>
-          </div>
+            </motion.div>
+          </motion.div>
 
           {/* Complexity & AI Section */}
-          <ComplexityInfo info={ALGORITHM_DATA[algorithm]} currentState={barState} stepCount={stepCount} />
+          <motion.div
+            initial={{ opacity: 0, y: 30, filter: 'blur(8px)' }}
+            animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+            transition={{ duration: 0.6, delay: 0.45, ease: [0.25, 0.46, 0.45, 0.94] }}
+          >
+            <ComplexityInfo info={ALGORITHM_DATA[algorithm]} currentState={barState} stepCount={stepCount} />
+          </motion.div>
 
         </main>
 
