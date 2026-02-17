@@ -258,7 +258,7 @@ const App: React.FC = () => {
           transition={{ duration: 0.6, ease: [0.25, 0.46, 0.45, 0.94] }}
           className="mb-6 text-center space-y-2"
         >
-          <h1 className="text-4xl md:text-5xl font-black bg-gradient-to-r from-[#03A63C] to-[#04D939] bg-clip-text text-transparent tracking-tight">
+          <h1 className="text-4xl md:text-5xl font-black text-white bg-gradient-to-r from-[#03A63C] to-[#04D939] bg-clip-text text-transparent tracking-tight">
             TraceLab
           </h1>
           <p className="text-white/40 text-sm md:text-base font-light tracking-wide">Interactive Sorting Visualizer & Complexity Analyzer</p>
