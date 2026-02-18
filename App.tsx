@@ -1,241 +1,84 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { AlgorithmType, AlgorithmInfo, BarState, SortStep } from './types';
-import { sortingAlgorithms } from './services/sortingAlgorithms';
-import BarGraph from './components/BarGraph';
-import Controls from './components/Controls';
-import ComplexityInfo from './components/ComplexityInfo';
-import { Activity } from 'lucide-react';
+import { ArrowUpRight, BarChart3, Search } from 'lucide-react';
 import Aurora from './components/Aurora';
 import Footer from './components/Footer';
+import SortApp from './SortApp';
+import SearchApp from './SearchApp';
 
-// Static Data for algorithms
-const ALGORITHM_DATA: Record<AlgorithmType, AlgorithmInfo> = {
-  [AlgorithmType.BubbleSort]: {
-    name: AlgorithmType.BubbleSort,
-    timeComplexity: { best: 'O(n)', average: 'O(n²)', worst: 'O(n²)' },
-    spaceComplexity: 'O(1)',
-    description: 'A simple sorting algorithm that repeatedly steps through the list, compares adjacent elements and swaps them if they are in the wrong order.',
-    algorithm: [
-      'procedure bubbleSort(arr, n)',
-      '  for i = 0 to n-1',
-      '    swapped = false',
-      '    for j = 0 to n-i-2',
-      '      if arr[j] > arr[j+1]',
-      '        swap(arr[j], arr[j+1])',
-      '        swapped = true',
-      '    if not swapped',
-      '      break  // already sorted',
-    ]
-  },
-  [AlgorithmType.SelectionSort]: {
-    name: AlgorithmType.SelectionSort,
-    timeComplexity: { best: 'O(n²)', average: 'O(n²)', worst: 'O(n²)' },
-    spaceComplexity: 'O(1)',
-    description: 'Divides the input list into two parts: a sorted sublist of items which is built up from left to right at the front (left) of the list and a sublist of the remaining unsorted items.',
-    algorithm: [
-      'procedure selectionSort(arr, n)',
-      '  for i = 0 to n-1',
-      '    minIdx = i',
-      '    for j = i+1 to n-1',
-      '      if arr[j] < arr[minIdx]',
-      '        minIdx = j',
-      '    if minIdx != i',
-      '      swap(arr[i], arr[minIdx])',
-    ]
-  },
-  [AlgorithmType.InsertionSort]: {
-    name: AlgorithmType.InsertionSort,
-    timeComplexity: { best: 'O(n)', average: 'O(n²)', worst: 'O(n²)' },
-    spaceComplexity: 'O(1)',
-    description: 'Builds the final sorted array one item at a time. It is much less efficient on large lists than more advanced algorithms such as quicksort, heapsort, or merge sort.',
-    algorithm: [
-      'procedure insertionSort(arr, n)',
-      '  for i = 1 to n-1',
-      '    key = arr[i]',
-      '    j = i - 1',
-      '    while j >= 0 and arr[j] > key',
-      '      arr[j+1] = arr[j]',
-      '      j = j - 1',
-      '    arr[j+1] = key',
-    ]
-  },
-  [AlgorithmType.MergeSort]: {
-    name: AlgorithmType.MergeSort,
-    timeComplexity: { best: 'O(n log n)', average: 'O(n log n)', worst: 'O(n log n)' },
-    spaceComplexity: 'O(n)',
-    description: 'A divide and conquer algorithm that divides the input array into two halves, calls itself for the two halves, and then merges the two sorted halves.',
-    algorithm: [
-      'procedure mergeSort(arr, l, r)',
-      '  if l < r',
-      '    mid = floor((l + r) / 2)',
-      '    mergeSort(arr, l, mid)',
-      '    mergeSort(arr, mid+1, r)',
-      '    merge left[l..mid], right[mid+1..r]',
-      '      while both halves have elements',
-      '        pick smaller, place in arr[k]',
-      '      copy remaining elements',
-    ]
-  },
-  [AlgorithmType.QuickSort]: {
-    name: AlgorithmType.QuickSort,
-    timeComplexity: { best: 'O(n log n)', average: 'O(n log n)', worst: 'O(n²)' },
-    spaceComplexity: 'O(log n)',
-    description: 'An efficient, in-place sorting algorithm that in practice is faster than MergeSort and HeapSort. It works by selecting a "pivot" element and partitioning the other elements into two sub-arrays.',
-    algorithm: [
-      'procedure quickSort(arr, lo, hi)',
-      '  if lo < hi',
-      '    pivot = arr[hi]',
-      '    i = lo - 1',
-      '    for j = lo to hi-1',
-      '      if arr[j] < pivot',
-      '        i++; swap(arr[i], arr[j])',
-      '    swap(arr[i+1], arr[hi])',
-      '    p = i + 1',
-      '    quickSort(arr, lo, p-1)',
-      '    quickSort(arr, p+1, hi)',
-    ]
-  },
-  [AlgorithmType.HeapSort]: {
-    name: AlgorithmType.HeapSort,
-    timeComplexity: { best: 'O(n log n)', average: 'O(n log n)', worst: 'O(n log n)' },
-    spaceComplexity: 'O(1)',
-    description: 'A comparison-based sorting algorithm. Heapsort can be thought of as an improved selection sort: like selection sort, heapsort divides its input into a sorted and an unsorted region.',
-    algorithm: [
-      'procedure heapSort(arr, n)',
-      '  // Build max heap',
-      '  for i = n/2-1 down to 0',
-      '    heapify(arr, n, i)',
-      '  // Extract elements',
-      '  for i = n-1 down to 1',
-      '    swap(arr[0], arr[i])',
-      '    heapify(arr, i, 0)',
-      'procedure heapify(arr, n, i)',
-      '  largest = max(i, left, right)',
-      '  if largest != i',
-      '    swap and recurse',
-    ]
-  }
-};
+type Route = 'home' | 'sorting' | 'searching';
 
 const App: React.FC = () => {
-  // State
-  const [array, setArray] = useState<number[]>([]);
-  const [algorithm, setAlgorithm] = useState<AlgorithmType>(AlgorithmType.BubbleSort);
-  const [arraySize, setArraySize] = useState<number>(50);
-  const [speed, setSpeed] = useState<number>(50);
-  const [isRunning, setIsRunning] = useState<boolean>(false);
-  const [isSorted, setIsSorted] = useState<boolean>(false);
+  const [route, setRoute] = useState<Route>('home');
 
-  // Animation State
-  const [activeIndices, setActiveIndices] = useState<number[]>([]);
-  const [barState, setBarState] = useState<BarState>(BarState.Default);
-  const [stepDescription, setStepDescription] = useState<string>('Ready to sort');
-  const [stepCount, setStepCount] = useState<number>(0);
-
-  // Refs for generator control
-  const generatorRef = useRef<Generator<SortStep> | null>(null);
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
-
-  // Generate random array
-  const generateArray = useCallback(() => {
-    const newArray = Array.from({ length: arraySize }, () =>
-      Math.floor(Math.random() * 100) + 5
-    );
-    setArray(newArray);
-    setIsSorted(false);
-    setActiveIndices([]);
-    setBarState(BarState.Default);
-    setStepDescription('Ready to sort');
-    setStepCount(0);
-    generatorRef.current = null;
-    if (timerRef.current) clearInterval(timerRef.current);
-    setIsRunning(false);
-  }, [arraySize]);
-
-  // Initial load
+  // Hash-based routing
   useEffect(() => {
-    generateArray();
-  }, [generateArray]);
-
-  // Handle Algorithm Change
-  const handleAlgorithmChange = (algo: AlgorithmType) => {
-    setAlgorithm(algo);
-    generateArray(); // Reset array to ensure fair start
-  };
-
-  // Step function
-  const step = () => {
-    if (!generatorRef.current) {
-      // Initialize generator based on selected algorithm
-      switch (algorithm) {
-        case AlgorithmType.BubbleSort:
-          generatorRef.current = sortingAlgorithms.bubbleSort(array);
-          break;
-        case AlgorithmType.SelectionSort:
-          generatorRef.current = sortingAlgorithms.selectionSort(array);
-          break;
-        case AlgorithmType.InsertionSort:
-          generatorRef.current = sortingAlgorithms.insertionSort(array);
-          break;
-        case AlgorithmType.MergeSort:
-          generatorRef.current = sortingAlgorithms.mergeSort(array);
-          break;
-        case AlgorithmType.QuickSort:
-          generatorRef.current = sortingAlgorithms.quickSort(array);
-          break;
-        case AlgorithmType.HeapSort:
-          generatorRef.current = sortingAlgorithms.heapSort(array);
-          break;
+    const handleHash = () => {
+      const hash = window.location.hash.replace('#', '') as Route;
+      if (hash === 'sorting' || hash === 'searching') {
+        setRoute(hash);
+      } else {
+        setRoute('home');
       }
-    }
-
-    const next = generatorRef.current?.next();
-
-    if (next && !next.done) {
-      const { array: newArray, indices, state, description } = next.value;
-      setArray(newArray);
-      setActiveIndices(indices);
-      setBarState(state);
-      setStepDescription(description || 'Sorting...');
-      setStepCount(prev => prev + 1);
-    } else {
-      // Finished
-      setIsRunning(false);
-      setIsSorted(true);
-      setActiveIndices([]);
-      setBarState(BarState.Sorted);
-      setStepDescription('Sorting Complete!');
-      if (timerRef.current) clearInterval(timerRef.current);
-    }
-  };
-
-  // Play handler
-  const handlePlay = () => {
-    setIsRunning(true);
-  };
-
-  // Pause handler
-  const handlePause = () => {
-    setIsRunning(false);
-    if (timerRef.current) clearInterval(timerRef.current);
-  };
-
-  // Animation Loop
-  useEffect(() => {
-    if (isRunning) {
-      timerRef.current = setInterval(() => {
-        step();
-      }, speed);
-    } else {
-      if (timerRef.current) clearInterval(timerRef.current);
-    }
-
-    return () => {
-      if (timerRef.current) clearInterval(timerRef.current);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isRunning, speed]); // We intentionally omit 'array' and others to avoid reseting interval on state change, generator handles state
+
+    handleHash();
+    window.addEventListener('hashchange', handleHash);
+    return () => window.removeEventListener('hashchange', handleHash);
+  }, []);
+
+  const navigate = (to: Route) => {
+    window.location.hash = to === 'home' ? '' : to;
+    setRoute(to);
+  };
+
+  if (route === 'sorting') {
+    return <SortApp onBack={() => navigate('home')} />;
+  }
+
+  if (route === 'searching') {
+    return <SearchApp onBack={() => navigate('home')} />;
+  }
+
+  // ─── Homepage ─────────────────────────────────────────────
+
+  const cards = [
+    {
+      title: 'Sorting Algorithms',
+      subtitle: 'Visualize & Analyze',
+      description: 'Watch Bubble Sort, Quick Sort, Merge Sort and more step through your data in real-time with complexity analysis.',
+      icon: BarChart3,
+      route: 'sorting' as Route,
+      algorithms: ['Bubble Sort', 'Selection Sort', 'Insertion Sort', 'Merge Sort', 'Quick Sort', 'Heap Sort'],
+      gradient: 'from-[#03A63C] to-[#04D939]',
+      glow: 'rgba(4, 217, 57, 0.15)',
+    },
+    {
+      title: 'Searching Algorithms',
+      subtitle: 'Visualize & Analyze',
+      description: 'Trace through Linear Search, Binary Search, Jump Search, and more with step-by-step cell highlighting.',
+      icon: Search,
+      route: 'searching' as Route,
+      algorithms: ['Linear Search', 'Binary Search', 'Jump Search', 'Exponential Search'],
+      gradient: 'from-[#04D939] to-[#03A63C]',
+      glow: 'rgba(3, 166, 60, 0.15)',
+    },
+  ];
+
+  const stagger = {
+    hidden: { opacity: 0 },
+    visible: { opacity: 1, transition: { staggerChildren: 0.15 } },
+  };
+
+  const fadeUp = {
+    hidden: { opacity: 0, y: 30, filter: 'blur(10px)' },
+    visible: {
+      opacity: 1,
+      y: 0,
+      filter: 'blur(0px)',
+      transition: { type: 'spring', stiffness: 100, damping: 20 },
+    },
+  };
 
   return (
     <div className="min-h-screen bg-[#012340] text-white relative overflow-hidden">
@@ -250,87 +93,80 @@ const App: React.FC = () => {
       </div>
 
       {/* Content */}
-      <div className="relative z-10 min-h-screen p-4 md:p-8 lg:p-12 flex flex-col">
-        {/* Header */}
-        <motion.header
-          initial={{ opacity: 0, y: -20, filter: 'blur(10px)' }}
+      <div className="relative z-10 min-h-screen flex flex-col">
+
+        {/* Hero */}
+        <motion.div
+          initial={{ opacity: 0, y: -30, filter: 'blur(12px)' }}
           animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-          transition={{ duration: 0.6, ease: [0.25, 0.46, 0.45, 0.94] }}
-          className="mb-6 text-center space-y-2"
+          transition={{ duration: 0.8, ease: [0.25, 0.46, 0.45, 0.94] }}
+          className="pt-16 md:pt-24 pb-8 text-center px-4"
         >
-          <h1 className="text-4xl md:text-5xl font-black text-white bg-gradient-to-r from-[#03A63C] to-[#04D939] bg-clip-text text-transparent tracking-tight">
+          <h1 className="text-5xl md:text-7xl font-black bg-gradient-to-r from-[#03A63C] to-[#04D939] bg-clip-text text-transparent tracking-tight mb-4">
             TraceLab
           </h1>
-          <p className="text-white/40 text-sm md:text-base font-light tracking-wide">Interactive Sorting Visualizer & Complexity Analyzer</p>
-        </motion.header>
+          <p className="text-white/40 text-base md:text-lg font-light tracking-wide max-w-xl mx-auto leading-relaxed">
+            Interactive algorithm visualizer with real-time step tracing & AI-powered complexity analysis
+          </p>
+        </motion.div>
 
-        <main className="flex-1 w-full max-w-7xl mx-auto flex flex-col gap-5">
+        {/* Cards */}
+        <motion.div
+          initial="hidden"
+          animate="visible"
+          variants={stagger}
+          className="flex-1 flex items-start justify-center px-4 md:px-8 pb-12"
+        >
+          <div className="w-full max-w-5xl grid grid-cols-1 md:grid-cols-2 gap-5 md:gap-6">
+            {cards.map((card) => (
+              <motion.button
+                key={card.route}
+                variants={fadeUp}
+                onClick={() => navigate(card.route)}
+                className="group relative text-left w-full bg-white/[0.04] backdrop-blur-sm rounded-2xl border border-white/[0.06] p-6 md:p-8 shadow-2xl cursor-pointer transition-all duration-300 hover:bg-white/[0.07] hover:border-white/[0.12] hover:scale-[1.02] active:scale-[0.99]"
+                style={{
+                  boxShadow: `0 0 60px ${card.glow}`,
+                }}
+              >
+                {/* Top Row */}
+                <div className="flex items-start justify-between mb-5">
+                  <div className={`p-3 rounded-xl bg-gradient-to-br ${card.gradient} shadow-lg`}>
+                    <card.icon className="w-6 h-6 text-[#012340]" />
+                  </div>
+                  <ArrowUpRight className="w-5 h-5 text-white/20 group-hover:text-[#04D939] group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all duration-300" />
+                </div>
 
-          {/* Controls */}
-          <motion.div
-            initial={{ opacity: 0, y: 20, filter: 'blur(8px)' }}
-            animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-            transition={{ duration: 0.5, delay: 0.15, ease: [0.25, 0.46, 0.45, 0.94] }}
-          >
-            <Controls
-              algorithm={algorithm}
-              setAlgorithm={handleAlgorithmChange}
-              isRunning={isRunning}
-              onPlay={handlePlay}
-              onPause={handlePause}
-              onReset={generateArray}
-              arraySize={arraySize}
-              setArraySize={setArraySize}
-              speed={speed}
-              setSpeed={setSpeed}
-              isSorted={isSorted}
-            />
-          </motion.div>
+                {/* Title */}
+                <h2 className="text-2xl md:text-3xl font-bold text-white tracking-tight mb-1">
+                  {card.title}
+                </h2>
+                <span className="text-xs font-semibold text-[#03A63C] uppercase tracking-widest">
+                  {card.subtitle}
+                </span>
 
-          {/* Visualization Area */}
-          <motion.div
-            initial={{ opacity: 0, y: 24, scale: 0.98, filter: 'blur(8px)' }}
-            animate={{ opacity: 1, y: 0, scale: 1, filter: 'blur(0px)' }}
-            transition={{ duration: 0.6, delay: 0.3, ease: [0.25, 0.46, 0.45, 0.94] }}
-            className="flex-1 min-h-[400px] flex flex-col relative bg-white/[0.04] backdrop-blur-sm rounded-2xl border border-white/[0.06] p-3 md:p-6 shadow-2xl"
-          >
-            {/* Status Badge */}
-            <div className="absolute top-4 left-6 z-10 glass px-4 py-2 rounded-full flex items-center gap-2">
-              <Activity className="w-4 h-4 text-[#04D939]" />
-              <span className="text-sm font-mono text-[#04D939]">{stepDescription}</span>
-            </div>
+                {/* Description */}
+                <p className="text-white/50 text-sm md:text-base mt-4 leading-relaxed">
+                  {card.description}
+                </p>
 
-            <BarGraph
-              array={array}
-              indices={activeIndices}
-              state={barState}
-            />
+                {/* Algorithm Tags */}
+                <div className="mt-5 flex flex-wrap gap-2">
+                  {card.algorithms.map((algo) => (
+                    <span
+                      key={algo}
+                      className="px-3 py-1 rounded-lg bg-white/[0.04] border border-white/[0.06] text-xs font-medium text-white/40 group-hover:text-white/60 group-hover:border-white/10 transition-colors"
+                    >
+                      {algo}
+                    </span>
+                  ))}
+                </div>
 
-            {/* Color Legend */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.4, delay: 0.6 }}
-              className="mt-5 flex flex-wrap justify-center gap-5 text-xs md:text-sm font-medium text-white/50"
-            >
-              <div className="flex items-center gap-2"><div className="w-3 h-3 bg-[#03A63C]/50 rounded-sm"></div> Default</div>
-              <div className="flex items-center gap-2"><div className="w-3 h-3 bg-yellow-400 rounded-sm"></div> Compare</div>
-              <div className="flex items-center gap-2"><div className="w-3 h-3 bg-red-500 rounded-sm"></div> Swap</div>
-              <div className="flex items-center gap-2"><div className="w-3 h-3 bg-orange-400 rounded-sm"></div> Overwrite</div>
-              <div className="flex items-center gap-2"><div className="w-3 h-3 bg-sky-400 rounded-sm"></div> Sorted</div>
-            </motion.div>
-          </motion.div>
-
-          {/* Complexity & AI Section */}
-          <motion.div
-            initial={{ opacity: 0, y: 30, filter: 'blur(8px)' }}
-            animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-            transition={{ duration: 0.6, delay: 0.45, ease: [0.25, 0.46, 0.45, 0.94] }}
-          >
-            <ComplexityInfo info={ALGORITHM_DATA[algorithm]} currentState={barState} stepCount={stepCount} />
-          </motion.div>
-
-        </main>
+                {/* Bottom glow line */}
+                <div className={`absolute bottom-0 left-6 right-6 h-px bg-gradient-to-r ${card.gradient} opacity-0 group-hover:opacity-40 transition-opacity duration-500`}></div>
+              </motion.button>
+            ))}
+          </div>
+        </motion.div>
 
         <Footer />
       </div>

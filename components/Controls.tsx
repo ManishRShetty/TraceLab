@@ -1,5 +1,5 @@
 import React from 'react';
-import { Play, Pause, RotateCcw, FastForward, ChevronDown } from 'lucide-react';
+import { Play, Pause, RotateCcw, FastForward, ChevronDown, ArrowLeft } from 'lucide-react';
 import { AlgorithmType } from '../types';
 
 interface ControlsProps {
@@ -14,6 +14,7 @@ interface ControlsProps {
   speed: number;
   setSpeed: (speed: number) => void;
   isSorted: boolean;
+  onBack: () => void;
 }
 
 const Controls: React.FC<ControlsProps> = ({
@@ -27,12 +28,22 @@ const Controls: React.FC<ControlsProps> = ({
   setArraySize,
   speed,
   setSpeed,
-  isSorted
+  isSorted,
+  onBack
 }) => {
   return (
     <div className="w-full bg-white/[0.04] backdrop-blur-sm p-4 md:px-6 md:py-4 rounded-2xl border border-white/[0.06] shadow-xl">
-      {/* Single Row: [Dropdown] [Buttons] [Sliders] */}
+      {/* Single Row: [Back] [Dropdown] [Buttons] [Sliders] */}
       <div className="flex flex-col md:flex-row items-center gap-4">
+
+        {/* Back Button */}
+        <button
+          onClick={onBack}
+          className="p-2.5 rounded-xl bg-[#012340] hover:bg-[#027333] text-white transition-all duration-200 active:scale-95 border border-white/10 shrink-0"
+          title="Back to Home"
+        >
+          <ArrowLeft className="w-4 h-4" />
+        </button>
 
         {/* Algorithm Selector */}
         <div className="relative shrink-0 w-full md:w-48">
@@ -66,10 +77,10 @@ const Controls: React.FC<ControlsProps> = ({
             onClick={isRunning ? onPause : onPlay}
             disabled={isSorted && !isRunning}
             className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-sm transition-all duration-200 active:scale-95 ${isSorted
-                ? 'bg-sky-500 text-white cursor-not-allowed opacity-70'
-                : isRunning
-                  ? 'bg-yellow-400 hover:bg-yellow-500 text-[#012340]'
-                  : 'bg-[#04D939] text-[#012340] neon-glow hover:brightness-110'
+              ? 'bg-sky-500 text-white cursor-not-allowed opacity-70'
+              : isRunning
+                ? 'bg-yellow-400 hover:bg-yellow-500 text-[#012340]'
+                : 'bg-[#04D939] text-[#012340] neon-glow hover:brightness-110'
               }`}
           >
             {isRunning ? (
@@ -119,3 +130,4 @@ const Controls: React.FC<ControlsProps> = ({
 };
 
 export default Controls;
+
