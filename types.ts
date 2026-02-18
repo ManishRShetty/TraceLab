@@ -37,3 +37,40 @@ export interface AlgorithmInfo {
 export interface ComplexityAnalysisResponse {
   analysis: string;
 }
+
+// ─── Search Algorithm Types ─────────────────────────────────
+
+export enum SearchAlgorithmType {
+  LinearSearch = 'Linear Search',
+  BinarySearch = 'Binary Search',
+  JumpSearch = 'Jump Search',
+  ExponentialSearch = 'Exponential Search'
+}
+
+export enum CellState {
+  Default = 'default',
+  Checking = 'checking',
+  Found = 'found',
+  Eliminated = 'eliminated',
+  Target = 'target'
+}
+
+export interface SearchStep {
+  array: number[];
+  indices: number[];
+  state: CellState;
+  description?: string;
+  foundIndex?: number;
+}
+
+export interface SearchAlgorithmInfo {
+  name: SearchAlgorithmType;
+  timeComplexity: {
+    best: string;
+    average: string;
+    worst: string;
+  };
+  spaceComplexity: string;
+  description: string;
+  algorithm: string[];
+}
