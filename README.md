@@ -1,6 +1,6 @@
 # TraceLab
 
-Interactive sorting algorithm visualizer with real-time pseudocode highlighting, complexity analysis, and AI insights — built with React & TypeScript.
+Interactive sorting & searching algorithm visualizer with real-time pseudocode highlighting, complexity analysis, and AI insights — built with React & TypeScript.
 
 ## ✨ Features
 
